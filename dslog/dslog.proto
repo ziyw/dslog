@@ -1,0 +1,18 @@
+
+syntax = "proto3";
+
+option go_package = "github.com/ziyw/dslog/dslog";
+
+package dslog;
+
+service Dslog {
+    rpc AddLog(LogRequest) returns (LogResponse) {}
+}
+
+message LogRequest {
+    string content = 1;
+}
+
+message LogResponse {
+    string status = 1;
+}
