@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"time"
 
 	pb "github.com/ziyw/dslog/dslog"
 	"google.golang.org/grpc"
@@ -21,7 +23,32 @@ type server struct {
 
 func (s *server) AddLog(ctx context.Context, in *pb.LogRequest) (*pb.LogResponse, error) {
 	log.Printf("Received: %v", in.GetContent())
+
+	err := s.PersistLog(in.GetContent())
+	if err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+
 	return &pb.LogResponse{Status: "OKAY"}, nil
+}
+
+// TODO: replace by using log generated time, not receiving time
+func (s *server) PersistLog(content string) error {
+	cur := time.Now().UTC()
+	filename := fmt.Sprintf(cur.Format("2006-01-02T15:00UTC"))
+	fmt.Println(filename)
+
+	file, err := os.OpenFile(filename+".log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("error open file: ", err)
+		return err
+	}
+	defer file.Close()
+
+	if _, err := file.WriteString("\n" + content); err != nil {
+		return err
+	}
+	return nil
 }
 
 func main() {
@@ -36,4 +63,5 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+
 }
