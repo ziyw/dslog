@@ -3,14 +3,18 @@ syntax = "proto3";
 
 option go_package = "github.com/ziyw/dslog/dslog";
 
+import "google/protobuf/timestamp.proto";
+
 package dslog;
 
 service Dslog {
-    rpc AddLog(LogRequest) returns (LogResponse) {}
+    rpc SendLog(LogRequest) returns (LogResponse) {}
 }
 
 message LogRequest {
-    string content = 1;
+    google.protobuf.Timestamp timestamp = 1;
+    string logType = 2;
+    string logMsg = 3;
 }
 
 message LogResponse {

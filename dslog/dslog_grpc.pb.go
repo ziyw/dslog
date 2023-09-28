@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DslogClient interface {
-	AddLog(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*LogResponse, error)
+	SendLog(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*LogResponse, error)
 }
 
 type dslogClient struct {
@@ -33,9 +33,9 @@ func NewDslogClient(cc grpc.ClientConnInterface) DslogClient {
 	return &dslogClient{cc}
 }
 
-func (c *dslogClient) AddLog(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*LogResponse, error) {
+func (c *dslogClient) SendLog(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*LogResponse, error) {
 	out := new(LogResponse)
-	err := c.cc.Invoke(ctx, "/dslog.Dslog/AddLog", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/dslog.Dslog/SendLog", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (c *dslogClient) AddLog(ctx context.Context, in *LogRequest, opts ...grpc.C
 // All implementations must embed UnimplementedDslogServer
 // for forward compatibility
 type DslogServer interface {
-	AddLog(context.Context, *LogRequest) (*LogResponse, error)
+	SendLog(context.Context, *LogRequest) (*LogResponse, error)
 	mustEmbedUnimplementedDslogServer()
 }
 
@@ -54,8 +54,8 @@ type DslogServer interface {
 type UnimplementedDslogServer struct {
 }
 
-func (UnimplementedDslogServer) AddLog(context.Context, *LogRequest) (*LogResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddLog not implemented")
+func (UnimplementedDslogServer) SendLog(context.Context, *LogRequest) (*LogResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendLog not implemented")
 }
 func (UnimplementedDslogServer) mustEmbedUnimplementedDslogServer() {}
 
@@ -70,20 +70,20 @@ func RegisterDslogServer(s grpc.ServiceRegistrar, srv DslogServer) {
 	s.RegisterService(&Dslog_ServiceDesc, srv)
 }
 
-func _Dslog_AddLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Dslog_SendLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LogRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DslogServer).AddLog(ctx, in)
+		return srv.(DslogServer).SendLog(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dslog.Dslog/AddLog",
+		FullMethod: "/dslog.Dslog/SendLog",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DslogServer).AddLog(ctx, req.(*LogRequest))
+		return srv.(DslogServer).SendLog(ctx, req.(*LogRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -96,8 +96,8 @@ var Dslog_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*DslogServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddLog",
-			Handler:    _Dslog_AddLog_Handler,
+			MethodName: "SendLog",
+			Handler:    _Dslog_SendLog_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -21,13 +21,15 @@ type server struct {
 	pb.UnimplementedDslogServer
 }
 
-func (s *server) AddLog(ctx context.Context, in *pb.LogRequest) (*pb.LogResponse, error) {
-	log.Printf("Received: %v", in.GetContent())
+func (s *server) SendLog(ctx context.Context, in *pb.LogRequest) (*pb.LogResponse, error) {
+	log.Printf("Received: %v %v %v", in.Timestamp.AsTime().Format(time.RFC3339), in.LogType, in.LogMsg)
 
-	err := s.PersistLog(in.GetContent())
-	if err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	// TODO: replace this with connect to postgreSQL
+
+	// err := s.PersistLog(in.GetContent())
+	// if err != nil {
+	// 	log.Fatalf("failed to serve: %v", err)
+	// }
 
 	return &pb.LogResponse{Status: "OKAY"}, nil
 }
