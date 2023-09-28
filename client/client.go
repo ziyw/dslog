@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
-	"flag"
+	"fmt"
 	"log"
 	"time"
 
@@ -13,35 +13,46 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-var (
-	addr = flag.String("addr", "localhost:50051", "server address")
-)
+type dslog struct {
+	conn   *grpc.ClientConn
+	client pb.DslogClient
+}
 
-func DslogInfo(msg string) (string, error) {
+func (d *dslog) Run() error {
+	serverAddr := "localhost:50051"
+	conn, err := grpc.Dial(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+		return err
+	}
+	client := pb.NewDslogClient(conn)
+	d.conn = conn
+	d.client = client
+
+	return nil
+}
+
+func (d *dslog) Stop() {
+	fmt.Println("stop log client")
+	d.conn.Close()
+}
+
+func (dslog *dslog) Info(msg string) {
 	buf := new(bytes.Buffer)
 	logger := slog.New(slog.NewTextHandler(buf, nil))
 	logger.Info(msg)
-	return buf.String(), nil
-}
-
-func main() {
-	flag.Parse()
-
-	conn, err := grpc.Dial(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("did not connect:% v", err)
-	}
-	defer conn.Close()
-	c := pb.NewDslogClient(conn)
+	infoMsg := buf.String()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
+	dslog.client.AddLog(ctx, &pb.LogRequest{Content: infoMsg})
+}
 
-	logContent, _ := DslogInfo("This is formated log")
+var logClient dslog
 
-	r, err := c.AddLog(ctx, &pb.LogRequest{Content: *&logContent})
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
-	}
-	log.Println("Response: %s", r.GetStatus())
+func main() {
+	logClient.Run()
+	defer logClient.Stop()
+
+	logClient.Info("This is the first correct message")
 }
