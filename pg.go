@@ -9,6 +9,13 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type LogEntry struct {
+	id        int
+	createdAt time.Time
+	logType   string
+	logMsg    string
+}
+
 type Repo struct {
 	db *sql.DB
 }
@@ -41,27 +48,30 @@ func (r *Repo) Insert(createdAt, logTyp, logMsg string) (int, error) {
 	return id, nil
 }
 
-func (r *Repo) PrintAll() {
+func (r *Repo) GetAll() []LogEntry {
 	rows, err := r.db.Query("SELECT * FROM dslog")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
 
+	entries := []LogEntry{}
+
 	for rows.Next() {
-		var id int
-		var createdAt, logType, logMsg string
-		if err := rows.Scan(&id, &createdAt, &logType, &logMsg); err != nil {
+		var entry LogEntry
+		if err := rows.Scan(&entry.id, &entry.createdAt, &entry.logType, &entry.logMsg); err != nil {
 			log.Fatal(err)
 		}
+		entries = append(entries, entry)
 
-		date, err := time.Parse(time.RFC3339, createdAt)
-		if err != nil {
-			log.Fatal("parse date error", err)
-		}
+		// date, err := time.Parse(time.RFC3339, createdAt)
+		// if err != nil {
+		// 	log.Fatal("parse date error", err)
+		// }
 
-		fmt.Println(id, date, logType, logMsg)
+		// fmt.Println(id, date, logType, logMsg)
 	}
+	return entries
 }
 
 func main() {
@@ -70,8 +80,11 @@ func main() {
 	repo.Connect()
 	defer repo.Close()
 
-	repo.Insert(time.Now().Format(time.RFC1123), "ERROR", "INSERT ERROR MESSAGE")
-	repo.PrintAll()
+	// repo.Insert(time.Now().Format(time.RFC1123), "ERROR", "INSERT ERROR MESSAGE")
+	myEntries := repo.GetAll()
+	for _, e := range myEntries {
+		fmt.Printf("%+v\n", e)
+	}
 
 	// connStr := "user=ziyan password=postgres dbname=logdb sslmode=disable"
 	// MyDb, err := sql.Open("postgres", connStr)
