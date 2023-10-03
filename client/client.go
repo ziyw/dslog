@@ -49,7 +49,12 @@ func (dslog *dslog) Info(logMsg string) {
 	defer cancel()
 
 	ts := timestamppb.Now()
-	dslog.client.SendLog(ctx, &pb.LogRequest{Timestamp: ts, LogType: INFO, LogMsg: logMsg})
+	response, err := dslog.client.SendLog(ctx, &pb.LogRequest{Timestamp: ts, LogType: INFO, LogMsg: logMsg})
+	if err != nil {
+		log.Fatal("error calling sendLog: ", err)
+		return
+	}
+	fmt.Println(response)
 }
 
 var logClient dslog
