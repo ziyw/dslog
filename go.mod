@@ -3,7 +3,7 @@ module github.com/ziyw/dslog
 go 1.19
 
 require (
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
+	github.com/lib/pq v1.10.9
 	google.golang.org/grpc v1.58.1
 	google.golang.org/protobuf v1.31.0
 )

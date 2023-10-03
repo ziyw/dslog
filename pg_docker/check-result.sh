@@ -14,20 +14,24 @@ psql -U ziyan
 INSERT INTO note(title, content, created_at) 
 VALUES ('DevNote', 'Should be very small', CURRENT_TIMESTAMP);
 
-
 // db name: logdb 
 psql logdb;
 
 CREATE TABLE dslog (
   id INT GENERATED ALWAYS AS IDENTITY,
-  type VARCHAR NOT NULL,
-  text VARCHAR NOT NULL
+  created_at TIMESTAMP NOT NULL,
+  logType VARCHAR NOT NULL, 
+  logMsg VARCHAR NOT NULL
 );
 
-INSERT INTO logs(type, text) 
-VALUES ('INFO', 'Hello world from client');
-INSERT INTO logs(type, text) 
-VALUES ('ERROR', 'server side exception');
-INSERT INTO logs(type, text) 
-VALUES ('WARN', 'This might now work');
+INSERT INTO dslog(created_at, logType, logMsg) 
+VALUES (Now(), 'INFO', 'Hello world from client');
+INSERT INTO dslog(created_at, logType, logMsg) 
+VALUES (Now(), 'ERROR', 'server side exception');
+INSERT INTO dslog(created_at, logType, logMsg) 
+VALUES (Now(), 'WARN', 'This might now work');
+
+DROP TABLE dslog; 
+
+pg_dump logdb > ~/Desktop/logdb.sql // run directly, not in psql 
 
