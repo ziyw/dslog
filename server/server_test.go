@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+const TestPort = "bufnet"
 const bufSize = 1024 * 1024
 
 var lis *bufconn.Listener
@@ -34,16 +35,16 @@ func bufDialer(context.Context, string) (net.Conn, error) {
 
 func TestConnection(t *testing.T) {
 	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
+	conn, err := grpc.DialContext(ctx, TestPort, grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
 	if err != nil {
-		t.Fatalf("fail dail bufnet: %v", err)
+		t.Fatalf("fail to connect to port %s: %v", TestPort, err)
 	}
 	defer conn.Close()
 
 	client := pb.NewDslogClient(conn)
 	resp, err := client.SendLog(ctx, &pb.LogRequest{Timestamp: timestamppb.Now(), LogType: "ERROR", LogMsg: "This is a test"})
 	if err != nil {
-		t.Fatalf("sendLog service failed: %v", err)
+		t.Fatalf("sendLog call failed: %v", err)
 	}
 	log.Printf("Response: %+v", resp)
 }
