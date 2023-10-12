@@ -1,9 +1,3 @@
-// TODO:
-// - GetAllAsync() -> multiple threads, each one query the ddb at the same time
-// - Unit tests
-
-// How fast it can go?
-
 package main
 
 import (
@@ -173,12 +167,12 @@ func (r Repo) asyncMessageProcess(in <-chan LogEntry, bufsize int) {
 	}
 }
 
-func main() {
-	var repo Repo
-	repo.Connect()
-	defer repo.Close()
+// func main() {
+// 	var repo Repo
+// 	repo.Connect()
+// 	defer repo.Close()
 
-	result := make(chan LogEntry, 20)
-	go repo.asyncGetAll(result)
-	repo.asyncMessageProcess(result, 20)
-}
+// 	result := make(chan LogEntry, 20)
+// 	go repo.asyncGetAll(result)
+// 	repo.asyncMessageProcess(result, 20)
+// }

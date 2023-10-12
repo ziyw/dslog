@@ -35,3 +35,52 @@ DROP TABLE dslog;
 
 pg_dump logdb > ~/Desktop/logdb.sql // run directly, not in psql 
 
+
+IMG_NAME=postgres-test-img
+APP_NAME=pg-test-app
+
+build:
+	docker image build . -t $(IMG_NAME)
+	docker volume create pgdata 
+	docker container run -d --rm -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=ziyan --name $(APP_NAME) $(IMG_NAME) -v pgdata:/var/lib/postgresql/data
+
+docker volume create pgdata
+docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+docker run -d \
+  --name my-pg \
+  -p 5432:5432 \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_USER=postgres \
+  -v pgdata:/var/lib/postgresql/data \
+  my-pg-img
+
+docker run -d \
+--name my-pg \
+-p 5432:5432 \
+-v pgdata:/var/lib/postgresql/data \
+postgres 
+
+
+docker run -d \
+	--name my-postgres \
+  -e POSTGRES_USER=ziyan \
+	-e POSTGRES_PASSWORD=mysecretpassword \
+	-e PGDATA=/var/lib/postgresql/data/pgdata \
+	-v pgdata:/var/lib/postgresql/data \
+  my-postgres-img
+
+
+docker image build . -t my-postgres-img
+docker volume create pgdata 
+
+
+docker exec mycontainer pgdata: /path/to/test.sh
+docker cp c:\myfolder\myfile.txt dummy:/root/myfile.txt
+
+docker cp logdb.sql my-postgres:/logdb.sql
+docker exec my-postgres psql -U ziyan < logdb.sql
+
+psql -U ziyan -d logdb -f logdb.sql
+
+https://1kevinson.com/how-to-create-a-postgres-database-in-docker/
+

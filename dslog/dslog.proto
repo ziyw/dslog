@@ -8,15 +8,22 @@ import "google/protobuf/timestamp.proto";
 package dslog;
 
 service Dslog {
-    rpc SendLog(LogRequest) returns (LogResponse) {}
+    rpc Send(LogMessage) returns (SendResponse) {}
+    rpc GetByTimeRange(TimeRange) returns (stream LogMessage) {}
+    rpc GetError(TimeRange) returns (stream LogMessage) {}
 }
 
-message LogRequest {
+message LogMessage {
     google.protobuf.Timestamp timestamp = 1;
     string logType = 2;
     string logMsg = 3;
 }
 
-message LogResponse {
-    string status = 1;
+message SendResponse {
+    string id = 1; 
+}
+
+message TimeRange {
+    google.protobuf.Timestamp startTime = 1;
+    google.protobuf.Timestamp endTime = 2;
 }

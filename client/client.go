@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"time"
 
@@ -38,30 +39,31 @@ func (d *dslog) Stop() {
 	d.conn.Close()
 }
 
-func (dslog *dslog) Info(logMsg string) {
-	// TODO: move slog display to server UI side
-	// buf := new(bytes.Buffer)
-	// logger := slog.New(slog.NewTextHandler(buf, nil))
-	// logger.Info(msg)
-	// infoMsg := buf.String()
+func main() {
+
+	var logClient dslog
+	logClient.Run()
+	defer logClient.Stop()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	ts := timestamppb.Now()
-	response, err := dslog.client.SendLog(ctx, &pb.LogRequest{Timestamp: ts, LogType: INFO, LogMsg: logMsg})
+	tr := &pb.TimeRange{
+		StartTime: timestamppb.New(time.Now().Add(-time.Hour * 3)),
+		EndTime:   timestamppb.New(time.Now())}
+	stream, err := logClient.client.GetByTimeRange(ctx, tr)
 	if err != nil {
-		log.Fatal("error calling sendLog: ", err)
-		return
+		log.Fatal("error geting stream", err)
 	}
-	fmt.Println(response)
-}
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal("%v.GetByTimeRange(_) = _, %v", logClient.client, err)
+		}
+		fmt.Println(msg)
+	}
 
-var logClient dslog
-
-func main() {
-	logClient.Run()
-	defer logClient.Stop()
-
-	logClient.Info("This is the first correct message")
 }

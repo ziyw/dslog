@@ -56,6 +56,7 @@ COPY public.dslog (id, created_at, logtype, logmsg) FROM stdin;
 1	2023-10-02 21:13:11.800572	INFO	Hello world from client
 2	2023-10-02 21:13:23.747713	ERROR	server side exception
 3	2023-10-02 21:13:28.245325	WARN	This might now work
+3	2023-10-02 21:13:28.245325	INFO	Message from 
 \.
 
 

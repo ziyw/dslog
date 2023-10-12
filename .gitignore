@@ -1,4 +1,7 @@
 TODO
+NOTE
 *.log
 .DS_Store
+pg_docker/*
+simple_pg_docker/
 
