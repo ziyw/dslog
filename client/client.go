@@ -49,12 +49,14 @@ func main() {
 	defer cancel()
 
 	tr := &pb.TimeRange{
-		StartTime: timestamppb.New(time.Now().Add(-time.Hour * 3)),
+		StartTime: timestamppb.New(time.Now().Add(-time.Hour * 24 * 100)),
 		EndTime:   timestamppb.New(time.Now())}
-	stream, err := logClient.client.GetByTimeRange(ctx, tr)
+
+	stream, err := logClient.client.GetError(ctx, tr)
 	if err != nil {
 		log.Fatal("error geting stream", err)
 	}
+
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -63,7 +65,7 @@ func main() {
 		if err != nil {
 			log.Fatal("%v.GetByTimeRange(_) = _, %v", logClient.client, err)
 		}
-		fmt.Println(msg)
+		fmt.Printf("%+v\n", msg.Timestamp.AsTime().Format(time.RFC3339))
 	}
 
 }

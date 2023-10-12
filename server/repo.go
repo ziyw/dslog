@@ -112,6 +112,25 @@ func (r *Repo) GetByTimeRange(startTime, endTime time.Time) []LogEntry {
 	return entries
 }
 
+func (r *Repo) GetByTypeInTimeRange(logType string, startTime, endTime time.Time) []LogEntry {
+	sql := "SELECT * FROM dslog WHERE logType = $1 AND created_at BETWEEN $2 AND $3"
+	rows, err := r.db.Query(sql, logType, startTime, endTime)
+	if err != nil {
+		log.Fatal("repo got error when fetch", err)
+	}
+	defer rows.Close()
+
+	entries := []LogEntry{}
+	for rows.Next() {
+		var entry LogEntry
+		if err := rows.Scan(&entry.id, &entry.createdAt, &entry.logType, &entry.logMsg); err != nil {
+			log.Fatal(err)
+		}
+		entries = append(entries, entry)
+	}
+	return entries
+}
+
 func (r *Repo) GetAll() []LogEntry {
 	sql := "SELECT * FROM dslog ORDER BY id ASC"
 	rows, err := r.db.Query(sql)

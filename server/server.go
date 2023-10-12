@@ -38,10 +38,17 @@ func (s *server) Send(ctx context.Context, in *pb.LogMessage) (*pb.SendResponse,
 	return &pb.SendResponse{Id: idStr}, nil
 }
 
-// GetByTimeRange(*TimeRange, Dslog_GetByTimeRangeServer) error
-
 func (s *server) GetByTimeRange(in *pb.TimeRange, stream pb.Dslog_GetByTimeRangeServer) error {
 	entries := repo.GetByTimeRange(in.StartTime.AsTime(), in.EndTime.AsTime())
+	for _, e := range entries {
+		var entry pb.LogMessage = toLogMessage(e)
+		stream.Send(&entry)
+	}
+	return nil
+}
+
+func (s *server) GetError(in *pb.TimeRange, stream pb.Dslog_GetErrorServer) error {
+	entries := repo.GetByTypeInTimeRange("ERROR", in.StartTime.AsTime(), in.EndTime.AsTime())
 	for _, e := range entries {
 		var entry pb.LogMessage = toLogMessage(e)
 		stream.Send(&entry)
