@@ -1,9 +1,8 @@
 // TODO:
-// - GetById()
-// - GetByType()
-// - GetByTimeRange()
-// - GetAll()
-// - GetAllAsync()
+// - GetAllAsync() -> multiple threads, each one query the ddb at the same time
+// - Unit tests
+
+// How fast it can go?
 
 package main
 
@@ -11,6 +10,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -137,36 +137,48 @@ func (r *Repo) GetAll() []LogEntry {
 	return entries
 }
 
+func (r *Repo) asyncGetAll(out chan LogEntry) {
+
+	sql := "SELECT * FROM dslog ORDER BY id ASC"
+	rows, err := r.db.Query(sql)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var entry LogEntry
+		if err := rows.Scan(&entry.id, &entry.createdAt, &entry.logType, &entry.logMsg); err != nil {
+			log.Fatal(err)
+		}
+		out <- entry
+	}
+	defer close(out)
+}
+
+func (r Repo) asyncMessageProcess(in <-chan LogEntry, bufsize int) {
+	var wg sync.WaitGroup
+	for {
+		for i := 0; i < bufsize; i++ {
+			if entry, ok := <-in; ok {
+				wg.Add(1)
+				entry.nicePrintln()
+				wg.Done()
+			} else {
+				wg.Wait()
+				return
+			}
+			wg.Wait()
+		}
+	}
+}
+
 func main() {
 	var repo Repo
 	repo.Connect()
 	defer repo.Close()
 
-	for _, entry := range repo.GetById(12) {
-		entry.nicePrintln()
-	}
-
-	// fmt.Println(repo.GetById(12))
-
-	// fmt.Print(repo.Get(556677))
-
-	// rows := repo.GetByTimeRange(time.Now().Add(-time.Hour*5), time.Now())
-	// for _, v := range rows {
-	// 	v.nicePrintln()
-	// fmt.Printf("%d %s %s %s\n", v.id, v.createdAt.Format(time.RFC3339), v.logType, v.logMsg)
-	// fmt.Printf("%+v\n", v)
-	// }
-
-	// id, err := repo.Insert(time.Now(), "INFO", "Test Insert")
-	// if err != nil {
-	// 	log.Fatal("error inserting new item: ", err)
-	// 	return
-	// }
-
-	// entry, err := repo.Get(id)
-	// if err != nil {
-	// 	log.Fatal("error fetching item: ", entry, err)
-	// 	return
-	// }
-	// fmt.Printf("%+v\n", entry)
+	result := make(chan LogEntry, 20)
+	go repo.asyncGetAll(result)
+	repo.asyncMessageProcess(result, 20)
 }
